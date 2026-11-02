@@ -15,5 +15,7 @@ def test_raw_data_has_expected_columns():
     assert len(df) > 0
 
 
-def test_database_url_uses_postgres_driver():
-    assert get_database_url().startswith("postgresql+psycopg2://")
+def test_database_url_uses_mysql_driver():
+    url = get_database_url()
+    assert url.startswith("mysql+pymysql://")
+    assert url.endswith("charset=utf8mb4")

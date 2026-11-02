@@ -1,4 +1,4 @@
-"""Kiểm tra nhanh môi trường: thư viện, file dữ liệu, kết nối PostgreSQL.
+"""Kiểm tra nhanh môi trường: thư viện, file dữ liệu, kết nối MySQL.
 
 Chạy: python scripts/check_env.py
 """
@@ -24,9 +24,9 @@ def main() -> int:
         engine = create_engine(get_database_url())
         with engine.connect() as conn:
             version = conn.execute(text("SELECT version()")).scalar()
-        print(f"Postgres: OK ({version.split(',')[0]})")
+        print(f"MySQL   : OK (phiên bản {version})")
     except Exception as exc:  # noqa: BLE001
-        print(f"Postgres: CHƯA KẾT NỐI ĐƯỢC -> {exc.__class__.__name__}: {exc}".splitlines()[0])
+        print(f"MySQL   : CHƯA KẾT NỐI ĐƯỢC -> {exc.__class__.__name__}: {exc}".splitlines()[0])
         print("          Hãy chạy `docker compose up -d` và kiểm tra file .env")
         return 1
     return 0

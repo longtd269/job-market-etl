@@ -27,7 +27,7 @@ job-market-etl/
 ├── notebooks/            # Notebook khám phá dữ liệu
 ├── reports/figures/      # Biểu đồ xuất ra
 ├── logs/                 # Log khi chạy pipeline
-├── docker-compose.yml    # PostgreSQL 16
+├── docker-compose.yml    # MySQL 8.4
 ├── requirements.txt
 ├── .env.example          # Mẫu cấu hình (copy thành .env)
 └── pytest.ini
@@ -35,7 +35,7 @@ job-market-etl/
 
 ## Cài đặt
 
-Yêu cầu: Python 3.11+ (đã thử với 3.13), Docker Desktop, Git.
+Yêu cầu: Python 3.11+ (đã thử với 3.13), Docker (OrbStack hoặc Docker Desktop), Git.
 
 ```bash
 # 1. Môi trường ảo Python
@@ -45,9 +45,9 @@ pip install -r requirements.txt
 
 # 2. Cấu hình
 cp .env.example .env               # Windows: copy .env.example .env
-# sửa POSTGRES_PASSWORD trong .env
+# sửa MYSQL_PASSWORD và MYSQL_ROOT_PASSWORD trong .env
 
-# 3. Khởi động PostgreSQL
+# 3. Khởi động MySQL
 docker compose up -d
 docker compose ps                  # chờ trạng thái "healthy"
 
@@ -56,8 +56,10 @@ python scripts/check_env.py
 pytest
 ```
 
-Kết nối DB bằng tay (DBeaver/psql): host `localhost`, port `5432`, user/password/db theo file `.env`.
-Hoặc: `docker exec -it job_etl_postgres psql -U job_etl -d jobs`
+Kết nối DB bằng tay (MySQL Workbench, DBeaver, SQLTools): host `127.0.0.1`, port `3306`, user/password/database theo file `.env`.
+Hoặc dùng mysql client trong container: `docker exec -it job_etl_mysql mysql -u job_etl -p jobs`
+
+MySQL được cấu hình `utf8mb4` để lưu đúng tiếng Việt, và giới hạn `innodb-buffer-pool-size=256M` cho máy RAM thấp (chiếm khoảng 200 MB khi chạy).
 
 Dừng DB: `docker compose down` (thêm `-v` nếu muốn xóa luôn dữ liệu).
 
@@ -65,5 +67,5 @@ Dừng DB: `docker compose down` (thêm `-v` nếu muốn xóa luôn dữ liệu
 
 - [x] Bước 0: Setup môi trường
 - [ ] Yêu cầu 1: Chuẩn hóa & làm sạch (salary, address, job_title)
-- [ ] Yêu cầu 2: Pipeline ETL CSV → PostgreSQL, lập lịch, xử lý lỗi
+- [ ] Yêu cầu 2: Pipeline ETL CSV → MySQL, lập lịch, xử lý lỗi
 - [ ] Yêu cầu 3: Phân tích & trực quan hóa

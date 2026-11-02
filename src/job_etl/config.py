@@ -11,10 +11,10 @@ RAW_DATA_PATH = PROJECT_ROOT / os.getenv("RAW_DATA_PATH", "data/raw/jobs.csv")
 
 
 def get_database_url() -> str:
-    """Chuỗi kết nối PostgreSQL cho SQLAlchemy."""
-    user = os.getenv("POSTGRES_USER", "job_etl")
-    password = os.getenv("POSTGRES_PASSWORD", "")
-    host = os.getenv("POSTGRES_HOST", "localhost")
-    port = os.getenv("POSTGRES_PORT", "5432")
-    db = os.getenv("POSTGRES_DB", "jobs")
-    return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db}"
+    """Chuỗi kết nối MySQL cho SQLAlchemy (driver PyMySQL, utf8mb4 để lưu tiếng Việt)."""
+    user = os.getenv("MYSQL_USER", "job_etl")
+    password = os.getenv("MYSQL_PASSWORD", "")
+    host = os.getenv("MYSQL_HOST", "127.0.0.1")
+    port = os.getenv("MYSQL_PORT", "3306")
+    db = os.getenv("MYSQL_DATABASE", "jobs")
+    return f"mysql+pymysql://{user}:{password}@{host}:{port}/{db}?charset=utf8mb4"
