@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtualenv
+.venv/
+venv/
+
+# Bí mật / cấu hình máy local
+.env
+
+# Dữ liệu sinh ra và log
+data/processed/*
+!data/processed/.gitkeep
+logs/*
+!logs/.gitkeep
+reports/figures/*
+!reports/figures/.gitkeep
+
+# Notebook / IDE / OS
+.ipynb_checkpoints/
+.vscode/
+.idea/
+.DS_Store
