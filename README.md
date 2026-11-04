@@ -41,7 +41,9 @@ Yêu cầu: Python 3.11+ (đã thử với 3.13), Docker (OrbStack hoặc Docker
 # 1. Môi trường ảo Python
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install --upgrade pip
 pip install -r requirements.txt
+pip install -e .
 
 # 2. Cấu hình
 cp .env.example .env               # Windows: copy .env.example .env
@@ -62,10 +64,3 @@ Hoặc dùng mysql client trong container: `docker exec -it job_etl_mysql mysql 
 MySQL được cấu hình `utf8mb4` để lưu đúng tiếng Việt, và giới hạn `innodb-buffer-pool-size=256M` cho máy RAM thấp (chiếm khoảng 200 MB khi chạy).
 
 Dừng DB: `docker compose down` (thêm `-v` nếu muốn xóa luôn dữ liệu).
-
-## Lộ trình
-
-- [x] Bước 0: Setup môi trường
-- [ ] Yêu cầu 1: Chuẩn hóa & làm sạch (salary, address, job_title)
-- [ ] Yêu cầu 2: Pipeline ETL CSV → MySQL, lập lịch, xử lý lỗi
-- [ ] Yêu cầu 3: Phân tích & trực quan hóa

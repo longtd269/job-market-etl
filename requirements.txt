@@ -15,3 +15,6 @@ seaborn==0.13.2
 # Kiểm thử
 pytest==8.3.4
 pytest-cov==6.0.0
+
+#Jupyter
+ipykernel==7.4.0

@@ -17,5 +17,11 @@ def test_raw_data_has_expected_columns():
 
 def test_database_url_uses_mysql_driver():
     url = get_database_url()
-    assert url.startswith("mysql+pymysql://")
-    assert url.endswith("charset=utf8mb4")
+    assert url.drivername == "mysql+pymysql"
+    assert url.query["charset"] == "utf8mb4"
+
+def test_password_with_special_characters(monkeypatch):
+    monkeypatch.setenv("MYSQL_PASSWORD", "abc@1234:/#")
+    url = get_database_url()
+    assert url.host == "127.0.0.1"
+    assert url.password == "abc@1234:/#"    
