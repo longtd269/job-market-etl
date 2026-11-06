@@ -1,3 +1,11 @@
+import logging
+import pandas as pd
+import sys
+
+logger = logging.getLogger(__name__)
+
+LOCATION_COLUMNS = ["job_id", "location_order", "city", "district"]
+
 """Chuẩn hóa cột address: chuỗi chữ -> locations [(city, district)]."""
 
 CITIES = {
@@ -35,7 +43,7 @@ def parse_address(raw) -> list:
             locations.append((current_city, None))
             continue
 
-        if locations[-1] == (current_city, None):
+        if locations and locations[-1] == (current_city, None):
             locations.pop()
 
         for district in part.split(","):
@@ -44,3 +52,29 @@ def parse_address(raw) -> list:
                 locations.append((current_city, district))    
 
     return locations
+
+
+def transform_address(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    rows = []
+    errors = []
+    for job_id, address in zip(df["id"], df["address"]):
+        try:
+           data = parse_address(address)
+           errors.append(None)
+        except Exception as e:
+           data = []
+           errors.append(e)
+           
+        for order, item in enumerate(data, start=1):
+            (city, district) = item
+            rows.append((job_id, order, city, district))       
+
+    jobs = df.copy()
+    jobs["address_error"] = errors  
+    locations = pd.DataFrame(rows, columns=LOCATION_COLUMNS)
+    logger.info("số lượng tin %d số lượng dòng location %d", len(df), len(locations))
+    n_error = jobs["address_error"].notna().sum()
+    if n_error:
+        print("Address: %d dòng không parse được", n_error)
+        logger.warning("Address: %d dòng không parse được", n_error)
+    return jobs, locations
