@@ -49,11 +49,39 @@ def plot_salary_by_group(summary: pd.DataFrame, path: Path) -> Path:
     ax.set_xlim(0, data["median_salary"].max() * 1.25)
     ax.tick_params(axis="y", colors=TEXT)
     ax.set_title("Lương theo nhóm nghề", loc="left", fontsize=13, color=TEXT, pad=12)
-    fig.text(0.01, 0.01, "Chỉ tính tin có ghi lương. USD quy đổi 25.000 VND.", fontsize=8, color=TEXT_MUTED)
+    fig.text(0.01, 0.01, "USD quy đổi 25.000 VND.", fontsize=8, color=TEXT_MUTED)
+    return _save(fig, path)
+
+def  plot_city(area: pd.DataFrame, path: Path, limit: int = 10) -> Path:
+    data = area.sort_values("n_jobs", ascending=False).head(limit).iloc[::-1]
+    fig, ax = plt.subplots(figsize=(8, 6), facecolor=SURFACE)
+    ax.barh(data["city"], data["n_jobs"], color=BAR_COLOR, height=0.6)
+    for y, n in enumerate(data["n_jobs"]):
+        ax.text(n + 1.5, y, f"{n} tin", va="center", fontsize=9, color=TEXT_MUTED)
+    ax.set_xlabel("Số tin theo khu vực địa lý", color=TEXT_MUTED)
+    ax.set_xlim(0, data["n_jobs"].max() * 1.3)
+    ax.tick_params(axis="y", colors=TEXT)
+    ax.set_title(f"Tin theo khu vực", loc="left", fontsize=13, color=TEXT, pad=12)
+    return _save(fig, path)
+
+def plot_top_technologies(tech: pd.DataFrame, path: Path, top: int = 15) -> Path:
+    data = tech.sort_values("n_jobs", ascending=False).head(top).iloc[::-1]
+    fig, ax = plt.subplots(figsize=(8, 6), facecolor=SURFACE)
+    ax.barh(data["technology"], data["n_jobs"], color=BAR_COLOR, height=0.6)
+    for y, n in enumerate(data["n_jobs"]):
+        ax.text(n + 1.5, y, f"{n} tin", va="center", fontsize=9, color=TEXT_MUTED)
+    ax.set_xlabel("Số tin có nhắc tới công nghệ trong tiêu đề", color=TEXT_MUTED)
+    ax.set_xlim(0, data["n_jobs"].max() * 1.3)
+    ax.tick_params(axis="y", colors=TEXT)
+    ax.set_title(f"Top {top} công nghệ được tuyển nhiều nhất", loc="left", fontsize=13, color=TEXT, pad=12)
     return _save(fig, path)
 
 def build_report(engine: Engine, out_dir: Path = FIGURES_DIR) -> list[Path]:
     salaries = read_view(engine, "v_job_salary")
+    area = read_view(engine, "v_area_jobs")
+    tech = read_view(engine, "v_technology_jobs")
     return [
         plot_salary_by_group(salary_by_group(salaries), out_dir / "1_luong_theo_nhom_nghe.png"),
+        plot_city(area, out_dir / "2_thanh_pho.png"),
+        plot_top_technologies(tech, out_dir / "3_top_cong_nghe.png"),
     ]
