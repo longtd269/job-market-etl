@@ -60,6 +60,7 @@ def run_pipeline(file_path: Path, engine: Engine) -> dict[str, int]:
         tables = build_tables(raw_data)
 
     with step("Load"):
+        run_sql_file(engine, SQL_DIR / "02_clean.sql")
         counts = load_tables(prepare_tables(tables), engine)
 
     return counts 
