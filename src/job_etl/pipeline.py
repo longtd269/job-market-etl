@@ -3,6 +3,8 @@ import logging
 import time
 from contextlib import contextmanager
 from pathlib import Path
+from datetime import date
+import argparse
 
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy import text
@@ -19,9 +21,7 @@ logger = logging.getLogger(__name__)
 SQL_DIR = PROJECT_ROOT / "sql"
 
 EXIT_OK = 0
-EXIT_UNEXPECTED = 1
-EXIT_DATA_QUALITY = 2
-EXIT_DATABASE = 3
+EXIT_ERROR = 1
 
 @contextmanager
 def step(name: str):
@@ -46,7 +46,7 @@ def wait_for_db(engine: Engine, retries: int = 3, delay: float = 5) -> None:
                 raise
             time.sleep(delay)  
 
-def run_pipeline(file_path: Path, engine: Engine) -> dict[str, int]:
+def run_pipeline(file_path: Path, engine: Engine, batch_date: date) -> dict[str, int]:
     with step("connect DB"):
         wait_for_db(engine)
     
@@ -61,6 +61,26 @@ def run_pipeline(file_path: Path, engine: Engine) -> dict[str, int]:
 
     with step("Load"):
         run_sql_file(engine, SQL_DIR / "02_clean.sql")
-        counts = load_tables(prepare_tables(tables), engine)
+        counts = load_tables(prepare_tables(tables), engine, batch_date)
 
-    return counts 
+    return counts
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Chạy pipeline")
+    parser.add_argument("--csv", type=Path, default=RAW_DATA_PATH, help="Đường dẫn file CSV gốc")
+    parser.add_argument(
+        "--date", type=date.fromisoformat, default=date.today(),
+        help="Ngày của dữ liệu, dạng YYYY-MM-DD (mặc định: hôm nay)",
+    )
+    args = parser.parse_args(argv)
+
+    logger.info("===== Pipeline bắt đầu: %s, ngày %s =====", args.csv, args.date)
+    start = time.perf_counter()
+    try:
+        counts = run_pipeline(args.csv, get_engine(), args.date)
+        logger.info("===== Pipeline thành công sau %.1fs: %s =====", time.perf_counter() - start, counts)
+        return EXIT_OK
+    except Exception as e:
+        logger.exception("Lỗi chạy pipeline")
+        return EXIT_ERROR
+

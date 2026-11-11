@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ def read_raw_csv(path: Path) -> pd.DataFrame:
     validate_colums(df)
 
     df = df[EXPECTED_COLUMNS]
-    df.insert(0, "id", range(1, len(df) + 1))
+    df.insert(0, "row_id", range(1, len(df) + 1))
     df["source_file"] = path.name
 
     return df     

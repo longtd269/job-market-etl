@@ -94,12 +94,12 @@ def extract_technologies(title) -> list[str]:
 
 def transform_technologies(df: pd.DataFrame) -> pd.DataFrame:
     rows = []
-    for job_id, job_title in zip(df["id"], df["job_title"]):
+    for row_id, job_title in zip(df["row_id"], df["job_title"]):
         data = extract_technologies(job_title)
         for item in data:
-            rows.append((job_id, item))
+            rows.append((row_id, item))
            
-    technologies = pd.DataFrame(rows, columns=["job_id", "technology"])
+    technologies = pd.DataFrame(rows, columns=["row_id", "technology"])
     logger.info("Technologies: %d tin -> %d dòng job_technologies", len(df), len(technologies))
 
     return technologies

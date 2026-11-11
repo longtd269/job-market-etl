@@ -4,7 +4,7 @@ import sys
 
 logger = logging.getLogger(__name__)
 
-LOCATION_COLUMNS = ["job_id", "location_order", "city", "district"]
+LOCATION_COLUMNS = ["row_id", "location_order", "city", "district"]
 
 """Chuẩn hóa cột address: chuỗi chữ -> locations [(city, district)]."""
 
@@ -57,7 +57,7 @@ def parse_address(raw) -> list:
 def transform_address(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     rows = []
     errors = []
-    for job_id, address in zip(df["id"], df["address"]):
+    for row_id, address in zip(df["row_id"], df["address"]):
         try:
            data = parse_address(address)
            errors.append(None)
@@ -67,7 +67,7 @@ def transform_address(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
            
         for order, item in enumerate(data, start=1):
             (city, district) = item
-            rows.append((job_id, order, city, district))       
+            rows.append((row_id, order, city, district))       
 
     jobs = df.copy()
     jobs["address_error"] = errors  
