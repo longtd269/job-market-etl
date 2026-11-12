@@ -41,9 +41,9 @@ def parse_salary(raw) -> tuple:
 
     #extract by condition text
     #max_salary
-    if t.startswith("tới") and len(numbers) == 1:
+    if t.startswith(("tới", "đến", "up to", "dưới")) and len(numbers) == 1:
         return None, numbers[0], unit_name
-    if t.startswith(("trên", "từ")) and len(numbers) == 1:
+    if t.startswith(("trên", "từ", "from")) and len(numbers) == 1:
         return numbers[0], None, unit_name
     if "-" in t and len(numbers) == 2:
         return numbers[0], numbers[1], unit_name

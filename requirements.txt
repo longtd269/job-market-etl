@@ -18,3 +18,8 @@ pytest-cov==6.0.0
 
 #Jupyter
 ipykernel==7.4.0
+
+#Crawler
+requests==2.32.3
+beautifulsoup4==4.12.3
+

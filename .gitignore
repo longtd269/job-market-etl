@@ -26,3 +26,6 @@ reports/figures/*
 .vscode/
 .idea/
 .DS_Store
+
+# File Craw
+data/raw/topcv_*.csv
