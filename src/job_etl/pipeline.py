@@ -15,6 +15,7 @@ from job_etl.db import get_engine, run_sql_file
 from job_etl.extract import load_to_db, read_raw_csv
 from job_etl.transform.build import build_tables, read_raw
 from job_etl.load import load_tables, prepare_tables
+from job_etl.crawl import crawl, save_raw, read_saved_pages
 
 
 logger = logging.getLogger(__name__)
@@ -46,9 +47,17 @@ def wait_for_db(engine: Engine, retries: int = 3, delay: float = 5) -> None:
                 raise
             time.sleep(delay)  
 
-def run_pipeline(file_path: Path, engine: Engine, batch_date: date) -> dict[str, int]:
+def run_pipeline(file_path: Path, engine: Engine, batch_date: date, 
+                 do_crawl: bool = False, html_dir: Path | None = None) -> dict[str, int]:
     with step("connect DB"):
         wait_for_db(engine)
+
+    if do_crawl:
+        with step("Crawl"):
+            file_path = save_raw(crawl(batch_date), batch_date)
+    elif html_dir is not None:
+        with step("Read HTML đã lưu"):
+            file_path = save_raw(read_saved_pages(html_dir, batch_date), batch_date)    
     
     with step("Extract"):
         run_sql_file(engine, SQL_DIR / "01_raw.sql")
@@ -72,12 +81,15 @@ def main(argv: list[str] | None = None) -> int:
         "--date", type=date.fromisoformat, default=date.today(),
         help="Ngày của dữ liệu, dạng YYYY-MM-DD (mặc định: hôm nay)",
     )
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument("--crawl", action="store_true", help="Crawl TopCV trước, bỏ qua --csv")
+    source.add_argument("--html-dir", type=Path, help="Thư mục chứa trang TopCV đã lưu bằng trình duyệt")
     args = parser.parse_args(argv)
 
     logger.info("===== Pipeline bắt đầu: %s, ngày %s =====", args.csv, args.date)
     start = time.perf_counter()
     try:
-        counts = run_pipeline(args.csv, get_engine(), args.date)
+        counts = run_pipeline(args.csv, get_engine(), args.date, do_crawl = args.crawl, html_dir = args.html_dir)
         logger.info("===== Pipeline thành công sau %.1fs: %s =====", time.perf_counter() - start, counts)
         return EXIT_OK
     except Exception as e:

@@ -1,12 +1,16 @@
 import logging
 import pandas as pd
 import sys
+import unicodedata
+
 
 logger = logging.getLogger(__name__)
 
 LOCATION_COLUMNS = ["row_id", "location_order", "city", "district"]
 
 """Chuẩn hóa cột address: chuỗi chữ -> locations [(city, district)]."""
+CITY_ALIASES = {"Huế": "Thừa Thiên Huế"}
+COUNTRIES = {"Nhật Bản", "Hàn Quốc", "Singapore", "Đài Loan", "Trung Quốc"}  
 
 CITIES = {
     "Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Hải Phòng", "Cần Thơ",
@@ -23,11 +27,21 @@ CITIES = {
     "Nước Ngoài", "Toàn Quốc",
 }
 
+def _city_key(name: str) -> str:
+    s = unicodedata.normalize("NFD", name.replace("đ", "d").replace("Đ", "D"))
+    s = "".join(c for c in s if unicodedata.category(c) != "Mn")
+    return " ".join(s.lower().replace("-", " ").split())
+
+CITY_LOOKUP = {_city_key(c): c for c in CITIES}
+CITY_LOOKUP |= {_city_key(a): c for a, c in CITY_ALIASES.items()}
+CITY_LOOKUP |= {_city_key(c): "Nước Ngoài" for c in COUNTRIES}
+
 #Func return list locations(city, district) 
 #Data sample
 """Hà Nội: Hồ Chí Minh: Đà Nẵng                                                     
 Hồ Chí Minh: Phú Nhuận: Đà Nẵng: Thanh Khê                                  
 Nước Ngoài: Hà Nội: Nam Từ Liêm""" 
+
 def parse_address(raw) -> list:
     if raw is None:
         return []
@@ -38,8 +52,9 @@ def parse_address(raw) -> list:
     for part in str(raw).split(":"):
         part = " ".join(str(part).split())
 
-        if part in CITIES:
-            current_city = part
+        city = CITY_LOOKUP.get(_city_key(part))    
+        if city is not None:
+            current_city = city
             locations.append((current_city, None))
             continue
 

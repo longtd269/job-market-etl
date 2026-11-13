@@ -29,3 +29,4 @@ reports/figures/*
 
 # File Craw
 data/raw/topcv_*.csv
+data/raw/html/

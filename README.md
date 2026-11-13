@@ -4,15 +4,15 @@ Làm sạch, xây pipeline ETL và phân tích dữ liệu tin tuyển dụng IT
 
 ## Dữ liệu đầu vào – `data/raw/jobs.csv`
 
-| Cột | Ví dụ | Ghi chú |
-|---|---|---|
-| created_date | 2023-08-01 | |
-| job_title | .Net Developer (N3) \| T9160 | Rất lộn xộn, cần gom nhóm |
-| company | Công ty Cổ Phần Rikkeisoft | |
-| salary | `Thoả thuận`, `10 - 20 triệu`, `Tới 2,000 USD`, `Trên 8 triệu` | 710 tin "Thoả thuận"; có cả VND và USD |
-| address | `Hà Nội: Cầu Giấy`, `Hà Nội: Thanh Xuân: Hải Dương: TP Hải Dương` | Có thể nhiều địa điểm |
-| time | Còn 25 ngày để ứng tuyển | |
-| link_description | https://www.topcv.vn/... | |
+| Cột             | Ví dụ                                                                            | Ghi chú                                    |
+| ---------------- | ---------------------------------------------------------------------------------- | ------------------------------------------- |
+| created_date     | 2023-08-01                                                                         |                                             |
+| job_title        | .Net Developer (N3) \| T9160                                                       | Rất lộn xộn, cần gom nhóm              |
+| company          | Công ty Cổ Phần Rikkeisoft                                                      |                                             |
+| salary           | `Thoả thuận`, `10 - 20 triệu`, `Tới 2,000 USD`, `Trên 8 triệu`       | 710 tin "Thoả thuận"; có cả VND và USD |
+| address          | `Hà Nội: Cầu Giấy`, `Hà Nội: Thanh Xuân: Hải Dương: TP Hải Dương` | Có thể nhiều địa điểm                |
+| time             | Còn 25 ngày để ứng tuyển                                                     |                                             |
+| link_description | https://www.topcv.vn/...                                                           |                                             |
 
 ## Cấu trúc thư mục
 
@@ -64,3 +64,15 @@ Hoặc dùng mysql client trong container: `docker exec -it job_etl_mysql mysql 
 MySQL được cấu hình `utf8mb4` để lưu đúng tiếng Việt, và giới hạn `innodb-buffer-pool-size=256M` cho máy RAM thấp (chiếm khoảng 200 MB khi chạy).
 
 Dừng DB: `docker compose down` (thêm `-v` nếu muốn xóa luôn dữ liệu).
+
+**Run pipeline**
+
+Run với raw html(save html thủ công, lưu save bằng tay về)
+`python scripts/run_pipeline.py --html-dir data/raw/html/2026-11-12 --date 2026-11-12`
+
+Run với crawl 
+`python scripts/run_pipeline.py --crawl`
+
+**Cronjob hàng ngày để crawl tin mới:(ví dụ 7h sáng hàng ngày)**
+
+`0 7 * * * /path/job-market-etl/scripts/run_pipeline.sh --crawl >> /path/job-market-etl/logs/cron.log 2>&1`
