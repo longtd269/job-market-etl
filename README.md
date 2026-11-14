@@ -76,3 +76,7 @@ Run với crawl
 **Cronjob hàng ngày để crawl tin mới:(ví dụ 7h sáng hàng ngày)**
 
 `0 7 * * * /path/job-market-etl/scripts/run_pipeline.sh --crawl >> /path/job-market-etl/logs/cron.log 2>&1`
+
+**Push thông báo tới discord khi chạy pipeline**
+Thêm web hook url vào env: `DISCORD_WEBHOOK_URL`
+Nếu khi chạy pipeline không muốn gửi thông báo thì thêm flag `--no-notify`

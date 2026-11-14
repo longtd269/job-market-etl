@@ -16,7 +16,7 @@ from job_etl.extract import load_to_db, read_raw_csv
 from job_etl.transform.build import build_tables, read_raw
 from job_etl.load import load_tables, prepare_tables
 from job_etl.crawl import crawl, save_raw, read_saved_pages
-
+from job_etl.notify import build_message, send_discord
 
 logger = logging.getLogger(__name__)
 SQL_DIR = PROJECT_ROOT / "sql"
@@ -81,6 +81,8 @@ def main(argv: list[str] | None = None) -> int:
         "--date", type=date.fromisoformat, default=date.today(),
         help="Ngày của dữ liệu, dạng YYYY-MM-DD (mặc định: hôm nay)",
     )
+    parser.add_argument("--no-notify", action="store_true", help="Không gửi thông báo Discord")
+
     source = parser.add_mutually_exclusive_group()
     source.add_argument("--crawl", action="store_true", help="Crawl TopCV trước, bỏ qua --csv")
     source.add_argument("--html-dir", type=Path, help="Thư mục chứa trang TopCV đã lưu bằng trình duyệt")
@@ -88,11 +90,20 @@ def main(argv: list[str] | None = None) -> int:
 
     logger.info("===== Pipeline bắt đầu: %s, ngày %s =====", args.csv, args.date)
     start = time.perf_counter()
+    counts, code = None, None
     try:
         counts = run_pipeline(args.csv, get_engine(), args.date, do_crawl = args.crawl, html_dir = args.html_dir)
-        logger.info("===== Pipeline thành công sau %.1fs: %s =====", time.perf_counter() - start, counts)
-        return EXIT_OK
+        code = EXIT_OK
     except Exception as e:
-        logger.exception("Lỗi chạy pipeline")
-        return EXIT_ERROR
+        code = EXIT_ERROR
 
+    seconds = time.perf_counter() - start
+    if code == EXIT_OK:
+        logger.info("===== Pipeline thành công sau %.1fs: %s =====", seconds, counts)
+    else:
+        logger.error("===== Pipeline thất bại sau %.1fs =====", seconds)
+
+    if not args.no_notify:
+        send_discord(build_message(code, args.date, seconds, counts=counts))
+
+    return code    
