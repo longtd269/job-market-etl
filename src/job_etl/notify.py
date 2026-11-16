@@ -31,16 +31,22 @@ def build_message(code: int, batch_date: date, seconds: float,
         ]
     return "\n".join(lines)
 
-def send_discord(text: str, webhook_url: str | None = None, post=requests.post, timeout: float = 10) -> bool:
-    webhook_url = webhook_url or os.getenv("DISCORD_WEBHOOK_URL")
+
+def post_webhook(payload: dict, webhook_url: str | None = None, env_var: str = "DISCORD_WEBHOOK_URL",
+                 post=requests.post, timeout: float = 10) -> bool:
+
+    webhook_url = webhook_url or os.getenv(env_var)
     if not webhook_url:
-        logger.info("Chưa cấu hình DISCORD_WEBHOOK_URL, bỏ qua thông báo")
+        logger.info("Chưa cấu hình %s, bỏ qua thông báo", env_var)
         return False
     try:
-        response = post(webhook_url, json={"content": text}, timeout=timeout)
+        response = post(webhook_url, json=payload, timeout=timeout)
         response.raise_for_status()
     except requests.RequestException as exc:
         logger.warning("Gửi thông báo Discord thất bại: %s", exc)
         return False
     logger.info("Đã gửi thông báo Discord")
     return True
+
+def send_discord(text: str, webhook_url: str | None = None, post=requests.post, timeout: float = 10) -> bool:
+    return post_webhook({"content": text}, webhook_url, "DISCORD_WEBHOOK_URL", post=post, timeout=timeout)
