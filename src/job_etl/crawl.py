@@ -65,7 +65,7 @@ def fetch_page(session: requests.Session, page: int, timeout: float = 20) -> str
     return response.text
 
 
-def crawl(crawl_date: date, max_pages: int = 40, delay: float = 3.0, fetch=None, cache_dir=None) -> pd.DataFrame:
+def crawl(crawl_date: date, max_pages: int = 30, delay: float = 3.0, fetch=None, cache_dir=None) -> pd.DataFrame:
     session = requests.Session(impersonate="chrome")
     fetch = fetch or (lambda page: fetch_page(session, page))
     cache_dir = Path(cache_dir or RAW_DIR / "html" / crawl_date.isoformat())

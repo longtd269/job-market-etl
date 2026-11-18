@@ -70,7 +70,7 @@ Dừng DB: `docker compose down` (thêm `-v` nếu muốn xóa luôn dữ liệu
 Run với raw html(save html thủ công, lưu save bằng tay về)
 `python scripts/run_pipeline.py --html-dir data/raw/html/2026-11-12 --date 2026-11-12`
 
-Run với crawl 
+Run với crawl
 `python scripts/run_pipeline.py --crawl`
 
 **Cronjob hàng ngày để crawl tin mới:(ví dụ 7h sáng hàng ngày)**
@@ -87,4 +87,6 @@ Nếu khi chạy pipeline không muốn gửi thông báo thì thêm flag `--no-
 
 Thêm web hook url vào env: `DISCORD_JOB_ALERT_WEBHOOK_URL`
 
-Chạy script: python scripts/run_job_alert.py --date <ngày>
+Chạy script: `python scripts/run_job_alert.py --date <ngày> --no-jd`
+
+`--no-jd` tắt phần lấy JD
