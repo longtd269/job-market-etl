@@ -25,9 +25,9 @@ DETAIL_DELAY = 5.0
 STOP_STATUS = {403, 429}
 
 SECTIONS = {
-    "Mô tả công việc": "description",
-    "Yêu cầu ứng viên": "requirements",
-    "Quyền lợi": "benefits",
+    "description": ("mô tả công việc", "job description", "jd"),
+    "requirements": ("yêu cầu ứng viên", "requirements", "candidate requirements", "yêu cầu"),
+    "benefits": ("quyền lợi", "benefits", "phúc lợi"),
 }
 
 MAX_JD_CHARS = 6000
@@ -36,7 +36,7 @@ MAX_SUMMARY_CHARS = 400
 
 def parse_job_detail(html: str) -> dict[str, str | None]:
     soup = BeautifulSoup(html, "html.parser")
-    result: dict[str, str | None] = dict.fromkeys(SECTIONS.values())
+    result: dict[str, str | None] = dict.fromkeys(SECTIONS)
     for item in soup.select("div.box-job-information-detail-item"):
         title = item.select_one("h2")
         body = item.select_one("div.box-job-information-detail-item__text")
@@ -44,8 +44,9 @@ def parse_job_detail(html: str) -> dict[str, str | None]:
             continue
 
         heading = title.get_text(" ", strip=True)
-        for prefix, column in SECTIONS.items():
-            if heading.startswith(prefix):
+        clean_heading = heading.strip().lower()
+        for column, prefixies in SECTIONS.items():
+            if clean_heading.startswith(prefixies):
                 result[column] = body.get_text("\n", strip=True)
     return result
 
@@ -58,16 +59,15 @@ def jd_text(detail: dict) -> str:
     parts = [f"## {names[col]}\n{detail[col]}" for col in names if pd.notna(detail.get(col)) and detail.get(col)]
     return "\n\n".join(parts)[:MAX_JD_CHARS]
 
-def fetch_detail_page(url: str, timeout: int = 20) -> str:
-    response = requests.get(url, headers=HEADERS, timeout=timeout)
-    response.raise_for_status()
+def fetch_detail_page(session: requests.Session, url: str, timeout: int = 20) -> str | None:
+    response = session.get(url)
     response.encoding = "utf-8"
     return response.text
 
 def load_detail_pages(
     jobs: pd.DataFrame,
     cache_dir: Path,
-    fetch: Callable[[str], str] = fetch_detail_page,
+    fetch: Callable[[str, str], str] = fetch_detail_page,
     max_pages: int = MAX_DETAIL_PAGES,
     delay: float = DETAIL_DELAY,
     sleep: Callable[[float], None] = time.sleep,
@@ -75,6 +75,8 @@ def load_detail_pages(
     cache_dir = Path(cache_dir)
     pages: dict[int, str] = {}
     requests_made = from_cache = 0
+    session = requests.Session(impersonate="chrome")
+
     for job_id, url in zip(jobs["job_id"], jobs["link_description"]):
         job_id = int(job_id)
         cache_file = cache_dir / f"{job_id}.html"
@@ -89,7 +91,8 @@ def load_detail_pages(
             sleep(delay)
         requests_made += 1
         try:
-            html = fetch(url)
+            html = fetch(session, url)
+            logger.info("Đã tải được %s", url)
         except HTTPError as exc:
             status = exc.response.status_code if exc.response is not None else None
             if status in STOP_STATUS:
@@ -197,7 +200,7 @@ def get_summaries(
     engine: Engine,
     jobs: pd.DataFrame,
     batch_date: date,
-    fetch: Callable[[str], str] = fetch_detail_page,
+    fetch: Callable[[str, str], str] = fetch_detail_page,
     cache_root: Path = JD_DIR,
     sleep: Callable[[float], None] = time.sleep,
 ) -> dict[int, str]:
